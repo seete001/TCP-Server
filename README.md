@@ -1,33 +1,24 @@
-# TCP Server in C
 
-A simple TCP echo server written from scratch in C using POSIX sockets. This project was built as a learning exercise to understand low-level networking, TCP communication, client-server architecture, and socket programming without relying on external libraries.
+# TCP Echo Server in C
+
+A multithreaded TCP echo server written in C using POSIX sockets and POSIX threads. This project was built as a learning exercise to explore low-level networking, TCP communication, authentication, concurrency, and systems programming without relying on external networking frameworks.
+
+---
 
 ## Features
 
 * TCP socket server
-* Accepts client connections
+* Accepts multiple client connections simultaneously
+* Thread-per-client architecture using POSIX threads
 * Password-based client authentication
-* Limited authentication attempts
-* Receives messages from clients
-* Echoes messages back to the sender
-* Handles client disconnects gracefully
+* Configurable authentication attempt limit
+* Echoes received messages back to the sender
+* Graceful client disconnect handling
 * Simple `quit` command support
-* Input validation for authentication
+* Input sanitization for authentication
 * Socket reuse support (`SO_REUSEADDR`)
-
----
-
-## Recent Changes
-
-The server has been updated with several improvements:
-
-* Added password authentication before allowing access.
-* Added authentication retry limits to prevent infinite login loops.
-* Improved handling of client disconnections.
-* Added newline (`\n` / `\r\n`) sanitization for password validation.
-* Added socket reuse support using `SO_REUSEADDR`.
-* Improved error handling for `send()` and `recv()` operations.
-* Added client connection logging.
+* Modular project structure using multiple source and header files
+* Build automation with Make
 
 ---
 
@@ -39,28 +30,64 @@ When a client connects, the server prompts for a password:
 Password:
 ```
 
-The default password is:
+Default password:
 
 ```text
 admin
 ```
 
-Clients must authenticate successfully before being allowed to send messages.
+Clients must authenticate successfully before they can interact with the server.
+
+After exceeding the maximum number of authentication attempts, the connection is closed.
+
+---
+
+## Project Structure
+
+```text
+project/
+├── main.c
+├── auth.c
+├── auth.h
+├── client.c
+├── client.h
+├── server.h
+├── Makefile
+└── README.md
+```
+
+### File Overview
+
+| File       | Purpose                                              |
+| ---------- | ---------------------------------------------------- |
+| `main.c`   | Server setup, socket creation, connection acceptance |
+| `auth.c`   | Client authentication logic                          |
+| `auth.h`   | Authentication function declarations                 |
+| `client.c` | Client thread handling and message processing        |
+| `client.h` | Client handler declarations                          |
+| `server.h` | Shared constants and definitions                     |
+| `Makefile` | Build automation                                     |
 
 ---
 
 ## Build
 
-Compile with GCC:
+Build the project using Make:
 
 ```bash
-gcc main.c -o server
+make
 ```
 
-For additional warnings:
+This compiles all source files and creates:
+
+```text
+server
+```
+
+Clean build artifacts:
 
 ```bash
-gcc -Wall -Wextra -pedantic main.c -o server
+make clean
 ```
 
 ---
@@ -76,20 +103,24 @@ Start the server:
 The server listens on:
 
 ```text
-localhost:8080
+0.0.0.0:8080
 ```
+
+which allows connections on all available network interfaces.
 
 ---
 
-## Test with Netcat
+## Connecting to the Server
 
-Open another terminal and connect:
+### Using Netcat
+
+Open another terminal:
 
 ```bash
 nc localhost 8080
 ```
 
-Example session:
+### Example Session
 
 ```text
 Password: admin
@@ -104,13 +135,41 @@ testing
 quit
 ```
 
+The `quit` command closes the connection.
+
+---
+
+## Example: Multiple Clients
+
+The server supports multiple simultaneous clients.
+
+Terminal 1:
+
+```bash
+nc localhost 8080
+```
+
+Terminal 2:
+
+```bash
+nc localhost 8080
+```
+
+Each client is handled independently in its own thread.
+
 ---
 
 ## Concepts Used
 
+### Networking
+
 * POSIX Sockets
 * TCP/IP Networking
 * Client-Server Architecture
+* Blocking I/O
+
+### Socket Functions
+
 * `socket()`
 * `bind()`
 * `listen()`
@@ -118,44 +177,51 @@ quit
 * `recv()`
 * `send()`
 * `setsockopt()`
-* Blocking I/O
-* Input Validation
-* Basic Authentication
 
----
+### Concurrency
 
-## Project Structure
+* POSIX Threads (`pthread`)
+* Thread Creation
+* Detached Threads
+* Concurrent Client Handling
 
-```text
-project/
-├── main.c
-└── README.md
-```
+### Systems Programming
+
+* Dynamic Memory Allocation
+* Resource Management
+* Error Handling
+* Modular Code Organization
+* Build Automation with Make
 
 ---
 
 ## Current Limitations
 
-* Single-client handling (one connection processed at a time)
-* Plain-text password authentication
-* No encryption (communication is not secure)
-* No user management system
+* Password stored in source code
+* Plain-text authentication
+* No encryption (TLS/SSL)
+* No user accounts
+* No persistent storage
 * No logging to files
-* No configuration file support
+* No thread pool implementation
+* Uses blocking sockets
 
 ---
 
 ## Future Improvements
 
-* Multi-client support using threads
+* Password hashing
+* User account system
+* Configuration file support
+* Thread pool implementation
+* Server-side logging
+* TLS/SSL encryption
 * Non-blocking sockets
 * `select()`, `poll()`, or `epoll()`
-* Configuration file support
-* Password hashing
-* TLS/SSL encryption
-* User accounts and permissions
-* Server-side logging
-* Basic HTTP server implementation
+* Chat server functionality
+* Broadcast messaging
+* Private messaging between clients
+* Administrative commands
 
 ---
 
@@ -164,16 +230,18 @@ project/
 This project was created to practice:
 
 * Network programming in C
-* TCP socket communication
-* Authentication workflows
-* Client-server interaction
+* TCP communication
+* Client authentication workflows
+* Multithreaded programming
+* POSIX threads
+* Socket programming
 * Error handling
 * Resource management
+* Modular software design
 * Systems programming fundamentals
 
 ---
 
 ## License
 
-This project is provided for educational purposes and learning.
-
+This project is provided for educational and learning purposes.
