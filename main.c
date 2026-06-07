@@ -1,55 +1,20 @@
+#include "client.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
 #define PORT 8080
-#define BUFFER_SIZE 4096
-#define PASSBUFF 64
-#define MAX_ATTEMPTS 3
 
-// Authenticate client
-int validate(int client_fd)
-{
-    const char *req_pass = "Password: ";
-
-    if (send(client_fd, req_pass, strlen(req_pass), 0) < 0)
-    {
-        perror("send");
-        return 1;
-    }
-
-    char pass_buffer[PASSBUFF];
-
-    ssize_t password_bytes =
-        recv(client_fd, pass_buffer, PASSBUFF - 1, 0);
-
-    if (password_bytes <= 0)
-        return 1;
-
-    pass_buffer[password_bytes] = '\0';
-
-    // Remove trailing newline(s)
-    pass_buffer[strcspn(pass_buffer, "\r\n")] = '\0';
-
-    if (strcmp(pass_buffer, "admin") != 0)
-    {
-        const char *msg = "Invalid password.\n";
-        send(client_fd, msg, strlen(msg), 0);
-        return 1;
-    }
-
-    const char *msg = "Authentication successful.\n";
-    send(client_fd, msg, strlen(msg), 0);
-
-    return 0;
-}
 
 int main(void)
 {
+    // socket setup
     int server_fd;
     int client_fd;
 
@@ -57,8 +22,6 @@ int main(void)
     struct sockaddr_in client_addr;
 
     socklen_t client_len = sizeof(client_addr);
-
-    char buffer[BUFFER_SIZE];
 
     // Create socket
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -124,61 +87,31 @@ int main(void)
         printf("Incoming connection from %s\n",
                inet_ntoa(client_addr.sin_addr));
 
-        int authenticated = 0;
+        int *fd_ptr = malloc(sizeof(int));
 
-        for (int attempts = 0; attempts < MAX_ATTEMPTS; attempts++)
+        if (!fd_ptr)
         {
-            if (validate(client_fd) == 0)
-            {
-                authenticated = 1;
-                break;
-            }
-        }
-
-        if (!authenticated)
-        {
-            printf("Authentication failed.\n");
             close(client_fd);
             continue;
         }
 
-        printf("Client authenticated.\n");
+        *fd_ptr = client_fd;
+        
+        pthread_t tid;
 
-        while (1)
+        if (pthread_create(&tid,
+                           NULL,
+                           client_handler,
+                           fd_ptr
+                            ) != 0)
         {
-            ssize_t bytes_received =
-                recv(client_fd,
-                     buffer,
-                     BUFFER_SIZE - 1,
-                     0);
-
-            if (bytes_received <= 0)
-                break;
-
-            buffer[bytes_received] = '\0';
-
-            buffer[strcspn(buffer, "\r\n")] = '\0';
-
-            if (strcmp(buffer, "quit") == 0)
-            {
-                printf("Client requested disconnect.\n");
-                break;
-            }
-
-            printf("Received: %s\n", buffer);
-
-            if (send(client_fd,
-                     buffer,
-                     strlen(buffer),
-                     0) < 0)
-            {
-                perror("send");
-                break;
-            }
+            perror("thread creation!");
+            free(fd_ptr);
+            close(client_fd);
+            continue;
         }
 
-        printf("Client disconnected.\n");
-        close(client_fd);
+        pthread_detach(tid);
     }
 
     close(server_fd);
