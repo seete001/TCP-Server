@@ -1,4 +1,3 @@
-
 # TCP Echo Server in C
 
 A multithreaded TCP echo server written in C using POSIX sockets and POSIX threads. This project was built as a learning exercise to explore low-level networking, TCP communication, authentication, concurrency, and systems programming without relying on external networking frameworks.
@@ -10,35 +9,14 @@ A multithreaded TCP echo server written in C using POSIX sockets and POSIX threa
 * TCP socket server
 * Accepts multiple client connections simultaneously
 * Thread-per-client architecture using POSIX threads
-* Password-based client authentication
-* Configurable authentication attempt limit
+* Password-based authentication
 * Echoes received messages back to the sender
 * Graceful client disconnect handling
 * Simple `quit` command support
-* Input sanitization for authentication
 * Socket reuse support (`SO_REUSEADDR`)
-* Modular project structure using multiple source and header files
-* Build automation with Make
-
----
-
-## Authentication
-
-When a client connects, the server prompts for a password:
-
-```text
-Password:
-```
-
-Default password:
-
-```text
-admin
-```
-
-Clients must authenticate successfully before they can interact with the server.
-
-After exceeding the maximum number of authentication attempts, the connection is closed.
+* Modular project structure
+* Automated builds using Make
+* Separated source, header, object, and binary directories
 
 ---
 
@@ -46,45 +24,66 @@ After exceeding the maximum number of authentication attempts, the connection is
 
 ```text
 project/
-├── main.c
-├── auth.c
-├── auth.h
-├── client.c
-├── client.h
-├── server.h
 ├── Makefile
-└── README.md
+├── README.md
+├── bin/
+│   └── server
+├── include/
+│   ├── auth.h
+│   ├── client.h
+│   ├── serverpass.h
+│   └── socket.h
+├── obj/
+│   ├── auth.o
+│   ├── client.o
+│   ├── main.o
+│   ├── serverpass.o
+│   └── socket.o
+└── src/
+    ├── auth.c
+    ├── client.c
+    ├── main.c
+    ├── serverpass.c
+    └── socket.c
 ```
 
-### File Overview
+---
 
-| File       | Purpose                                              |
-| ---------- | ---------------------------------------------------- |
-| `main.c`   | Server setup, socket creation, connection acceptance |
-| `auth.c`   | Client authentication logic                          |
-| `auth.h`   | Authentication function declarations                 |
-| `client.c` | Client thread handling and message processing        |
-| `client.h` | Client handler declarations                          |
-| `server.h` | Shared constants and definitions                     |
-| `Makefile` | Build automation                                     |
+## File Overview
+
+| File                   | Purpose                                                         |
+| ---------------------- | --------------------------------------------------------------- |
+| `src/main.c`           | Program entry point, server startup, connection acceptance loop |
+| `src/socket.c`         | Socket creation, binding, listening, and server setup           |
+| `include/socket.h`     | Socket-related declarations                                     |
+| `src/client.c`         | Client thread handling and message processing                   |
+| `include/client.h`     | Client handler declarations                                     |
+| `src/auth.c`           | Authentication logic                                            |
+| `include/auth.h`       | Authentication declarations                                     |
+| `src/serverpass.c`     | Server password validation                                      |
+| `include/serverpass.h` | Password validation declarations                                |
+| `obj/*.o`              | Intermediate object files generated during compilation          |
+| `bin/server`           | Compiled executable                                             |
+| `Makefile`             | Build automation                                                |
 
 ---
 
 ## Build
 
-Build the project using Make:
+Compile the project:
 
 ```bash
 make
 ```
 
-This compiles all source files and creates:
+This creates:
 
 ```text
-server
+obj/
+bin/server
 ```
 
-Clean build artifacts:
+Clean generated files:
 
 ```bash
 make clean
@@ -97,7 +96,13 @@ make clean
 Start the server:
 
 ```bash
-./server
+make run
+```
+
+or directly:
+
+```bash
+./bin/server 123
 ```
 
 The server listens on:
@@ -106,60 +111,23 @@ The server listens on:
 0.0.0.0:8080
 ```
 
-which allows connections on all available network interfaces.
+---
+
+## Design Notes
+
+The project follows a modular design:
+
+* Networking code is isolated in `socket.c`
+* Authentication logic is isolated in `auth.c`
+* Password validation is isolated in `serverpass.c`
+* Client handling is isolated in `client.c`
+* `main.c` remains focused on accepting incoming connections and spawning worker threads
+
+This separation makes the codebase easier to maintain and extend as new features are added.
 
 ---
 
-## Connecting to the Server
-
-### Using Netcat
-
-Open another terminal:
-
-```bash
-nc localhost 8080
-```
-
-### Example Session
-
-```text
-Password: admin
-Authentication successful.
-
-hello
-hello
-
-testing
-testing
-
-quit
-```
-
-The `quit` command closes the connection.
-
----
-
-## Example: Multiple Clients
-
-The server supports multiple simultaneous clients.
-
-Terminal 1:
-
-```bash
-nc localhost 8080
-```
-
-Terminal 2:
-
-```bash
-nc localhost 8080
-```
-
-Each client is handled independently in its own thread.
-
----
-
-## Concepts Used
+## Concepts Practiced
 
 ### Networking
 
@@ -168,43 +136,20 @@ Each client is handled independently in its own thread.
 * Client-Server Architecture
 * Blocking I/O
 
-### Socket Functions
-
-* `socket()`
-* `bind()`
-* `listen()`
-* `accept()`
-* `recv()`
-* `send()`
-* `setsockopt()`
-
 ### Concurrency
 
 * POSIX Threads (`pthread`)
-* Thread Creation
 * Detached Threads
-* Concurrent Client Handling
+* Thread-per-Client Design
 
 ### Systems Programming
 
 * Dynamic Memory Allocation
 * Resource Management
-* Error Handling
-* Modular Code Organization
+* Signal Handling Fundamentals
+* Modular Program Architecture
 * Build Automation with Make
-
----
-
-## Current Limitations
-
-* Password stored in source code
-* Plain-text authentication
-* No encryption (TLS/SSL)
-* No user accounts
-* No persistent storage
-* No logging to files
-* No thread pool implementation
-* Uses blocking sockets
+* Header and Source File Organization
 
 ---
 
@@ -213,6 +158,7 @@ Each client is handled independently in its own thread.
 * Password hashing
 * User account system
 * Configuration file support
+* Graceful SIGINT shutdown handling
 * Thread pool implementation
 * Server-side logging
 * TLS/SSL encryption
@@ -220,28 +166,9 @@ Each client is handled independently in its own thread.
 * `select()`, `poll()`, or `epoll()`
 * Chat server functionality
 * Broadcast messaging
-* Private messaging between clients
+* Private messaging
 * Administrative commands
 
----
+```
+```
 
-## Learning Goals
-
-This project was created to practice:
-
-* Network programming in C
-* TCP communication
-* Client authentication workflows
-* Multithreaded programming
-* POSIX threads
-* Socket programming
-* Error handling
-* Resource management
-* Modular software design
-* Systems programming fundamentals
-
----
-
-## License
-
-This project is provided for educational and learning purposes.
