@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <sys/socket.h>
 
 #define BUFFER_SIZE 4096
@@ -56,6 +57,40 @@ void *client_handler(void *arg)
             break;
         }
 
+        else if(strcmp(buffer, "help") == 0)
+        {
+            char help_buffer[64];
+
+            snprintf(help_buffer,
+                     sizeof(help_buffer),
+                     "Available commands: help, time, quit\n");
+            send(client_fd,
+                 help_buffer,
+                 strlen(help_buffer),
+                 0);
+            continue;
+        }
+
+        else if(strcmp(buffer, "time") == 0)
+        {
+            time_t current_time = time(NULL);
+
+            struct tm *local_time = localtime(&current_time);
+            
+            char time_string[64];
+
+            strftime(time_string,
+                     sizeof(time_string),
+                     "Current Time: %Y-%m-%d %H:%M:%S\n",
+                     local_time);
+
+            send(client_fd,
+                 time_string,
+                 strlen(time_string),
+                 0);
+            continue;
+        }
+
         printf("Received: %s\n", buffer);
 
         if (send(client_fd,
@@ -66,6 +101,10 @@ void *client_handler(void *arg)
             perror("send");
             break;
         }
+        send(client_fd,
+             "\n",
+             1,
+             0);
     }
 
     printf("Client disconnected.\n");
