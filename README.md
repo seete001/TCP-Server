@@ -25,6 +25,7 @@ It demonstrates TCP networking, concurrency, modular C architecture, and build s
 
 ## Project Structure
 
+```text
 project/
 ├── Makefile
 ├── README.md
@@ -47,8 +48,7 @@ project/
     ├── main.c
     ├── serverpass.c
     └── socket.c
-
----
+```
 
 ## File Overview
 
