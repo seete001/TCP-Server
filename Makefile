@@ -1,27 +1,33 @@
-objects = main.o auth.o client.o socket.o serverpass.o
 CC = gcc
-CFLAGS = -Wall -Wextra -Wpedantic -pthread
 
-server : $(objects)
-	$(CC) $(CFLAGS) $(objects) -o server
+CFLAGS = -Wall -Wextra -Wpedantic -pthread -Iinclude
 
-main.o : main.c
-	$(CC) $(CFLAGS) -c main.c
+SRC = src/main.c \
+      src/auth.c \
+      src/client.c \
+      src/socket.c \
+      src/serverpass.c
 
-auth.o : auth.c auth.h
-	$(CC) $(CFLAGS) -c auth.c
+OBJ = obj/main.o \
+      obj/auth.o \
+      obj/client.o \
+      obj/socket.o \
+      obj/serverpass.o
 
-client.o : client.c client.h auth.h
-	$(CC) $(CFLAGS) -c client.c
+TARGET = bin/server
 
-socket.o : socket.c socket.h
-	$(CC) $(CFLAGS) -c socket.c
+$(TARGET): $(OBJ)
+	mkdir -p bin
+	$(CC) $(CFLAGS) $(OBJ) -o $(TARGET)
 
-serverpass.o : serverpass.c serverpass.h
-	$(CC) $(CFLAGS) -c serverpass.c
-	
-run : server
-	./server 123
+obj/%.o: src/%.c
+	mkdir -p obj
+	$(CC) $(CFLAGS) -c $< -o $@
+
+run: $(TARGET)
+	./$(TARGET) 123
 
 clean:
-	rm -f *.o server
+	rm -rf obj bin
+
+.PHONY: run clean

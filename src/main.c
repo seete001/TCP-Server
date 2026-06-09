@@ -15,14 +15,15 @@
 int main(int argc, char* argv[])
 {
     if (password_check(argc, argv) != 0) return EXIT_FAILURE;
+    
     int client_fd;
-    int server_fd = create_server_socket();
+    int server_fd;
 
+    server_fd = create_server_socket();
     struct sockaddr_in client_addr;
-
     socklen_t client_len = sizeof(client_addr);
 
-   while (1)
+    while (1)
     {
         client_fd = accept(server_fd,
                            (struct sockaddr *)&client_addr,
@@ -65,5 +66,5 @@ int main(int argc, char* argv[])
     }
 
     close(server_fd);
-    return 0;
+    return EXIT_SUCCESS;
 }
