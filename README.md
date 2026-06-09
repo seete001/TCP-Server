@@ -1,28 +1,30 @@
-# TCP Echo Server in C
+# TCP Chat Server in C
 
-A multithreaded TCP echo server written in C using POSIX sockets and POSIX threads. This project was built as a learning exercise to explore low-level networking, TCP communication, authentication, concurrency, and systems programming without relying on external networking frameworks.
+A multithreaded TCP server written in C using POSIX sockets and POSIX threads.  
+This project started as a learning exercise for low-level networking and has evolved into a modular foundation for a real-time chat server.
+
+It demonstrates TCP networking, concurrency, modular C architecture, and build system design using Make.
 
 ---
 
 ## Features
 
-* TCP socket server
-* Accepts multiple client connections simultaneously
-* Thread-per-client architecture using POSIX threads
-* Password-based authentication
-* Echoes received messages back to the sender
-* Graceful client disconnect handling
-* Simple `quit` command support
-* Socket reuse support (`SO_REUSEADDR`)
-* Modular project structure
-* Automated builds using Make
-* Separated source, header, object, and binary directories
+- TCP socket server
+- Accepts multiple client connections simultaneously
+- Thread-per-client architecture using POSIX threads
+- Password-based authentication
+- Basic command handling (`time`, `help`, `quit`)
+- Echo-style message handling (legacy behavior)
+- Socket reuse support (`SO_REUSEADDR`)
+- Graceful client disconnect handling
+- Modular project structure (separated networking, auth, and client logic)
+- Build automation using Make
+- Organized source, header, object, and binary directories
 
 ---
 
 ## Project Structure
 
-```text
 project/
 ├── Makefile
 ├── README.md
@@ -45,130 +47,135 @@ project/
     ├── main.c
     ├── serverpass.c
     └── socket.c
-```
 
 ---
 
 ## File Overview
 
-| File                   | Purpose                                                         |
-| ---------------------- | --------------------------------------------------------------- |
-| `src/main.c`           | Program entry point, server startup, connection acceptance loop |
-| `src/socket.c`         | Socket creation, binding, listening, and server setup           |
-| `include/socket.h`     | Socket-related declarations                                     |
-| `src/client.c`         | Client thread handling and message processing                   |
-| `include/client.h`     | Client handler declarations                                     |
-| `src/auth.c`           | Authentication logic                                            |
-| `include/auth.h`       | Authentication declarations                                     |
-| `src/serverpass.c`     | Server password validation                                      |
-| `include/serverpass.h` | Password validation declarations                                |
-| `obj/*.o`              | Intermediate object files generated during compilation          |
-| `bin/server`           | Compiled executable                                             |
-| `Makefile`             | Build automation                                                |
+- src/main.c → Server entry point, accept loop, thread creation  
+- src/socket.c → TCP socket creation, bind, listen setup  
+- include/socket.h → Socket function declarations  
+- src/client.c → Client thread handling and command processing  
+- include/client.h → Client handler declarations  
+- src/auth.c → Authentication logic  
+- include/auth.h → Authentication declarations  
+- src/serverpass.c → Server password validation  
+- include/serverpass.h → Password handling declarations  
+- obj/*.o → Compiled object files  
+- bin/server → Final executable  
+- Makefile → Build system  
 
 ---
 
 ## Build
 
-Compile the project:
-
-```bash
 make
-```
 
-This creates:
+This compiles all source files into obj/ and links them into:
 
-```text
-obj/
 bin/server
-```
 
-Clean generated files:
+---
 
-```bash
+## Clean
+
 make clean
-```
 
 ---
 
 ## Run
 
-Start the server:
-
-```bash
 make run
-```
 
-or directly:
+or:
 
-```bash
 ./bin/server 123
-```
-
-The server listens on:
-
-```text
-0.0.0.0:8080
-```
 
 ---
 
-## Design Notes
+## Client Connection
 
-The project follows a modular design:
-
-* Networking code is isolated in `socket.c`
-* Authentication logic is isolated in `auth.c`
-* Password validation is isolated in `serverpass.c`
-* Client handling is isolated in `client.c`
-* `main.c` remains focused on accepting incoming connections and spawning worker threads
-
-This separation makes the codebase easier to maintain and extend as new features are added.
+nc localhost 8080
 
 ---
 
-## Concepts Practiced
+## Commands
 
-### Networking
+help
+- show available commands
+- time
+- display server time
+- quit
+- disconnect from server
 
-* POSIX Sockets
-* TCP/IP Networking
-* Client-Server Architecture
-* Blocking I/O
+time output:
+Current time: 2026-06-09 21:45:12
 
-### Concurrency
-
-* POSIX Threads (`pthread`)
-* Detached Threads
-* Thread-per-Client Design
-
-### Systems Programming
-
-* Dynamic Memory Allocation
-* Resource Management
-* Signal Handling Fundamentals
-* Modular Program Architecture
-* Build Automation with Make
-* Header and Source File Organization
+quit closes the connection.
 
 ---
 
-## Future Improvements
+## Design Overview
 
-* Password hashing
-* User account system
-* Configuration file support
-* Graceful SIGINT shutdown handling
-* Thread pool implementation
-* Server-side logging
-* TLS/SSL encryption
-* Non-blocking sockets
-* `select()`, `poll()`, or `epoll()`
-* Chat server functionality
-* Broadcast messaging
-* Private messaging
-* Administrative commands
+Networking Layer (socket.c)
+- Socket creation
+- Bind/listen setup
 
-```
-```
+Client Layer (client.c)
+- Handles each client thread
+- Processes commands
 
+Authentication Layer (auth.c, serverpass.c)
+- Password validation
+
+Main (main.c)
+- Accept loop
+- Thread creation
+
+---
+
+## Concepts Used
+
+Networking:
+- TCP sockets
+- POSIX APIs
+
+Concurrency:
+- pthreads
+- Thread-per-client model
+
+Systems Programming:
+- malloc/free
+- snprintf
+- Modular architecture
+- Makefile builds
+
+---
+
+## Limitations
+
+- No broadcasting (not a real chat yet)
+- No usernames
+- No encryption
+- Thread-per-client scaling limits
+- Password passed via CLI
+
+---
+
+## Roadmap
+
+- Broadcast chat system
+- Usernames
+- Private messages (/msg)
+- /users command
+- Mutex-protected client list
+- Thread pool or select/poll/epoll
+- TLS encryption
+- Logging system
+- Graceful shutdown
+
+---
+
+## License
+
+Educational use only.
