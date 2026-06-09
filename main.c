@@ -1,5 +1,6 @@
 #include "client.h"
 #include "socket.h"
+#include "serverpass.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,24 +12,11 @@
 #include <arpa/inet.h>
 
 
-
 int main(int argc, char* argv[])
 {
-    if (argc < 2)
-    {
-        perror("Usage: ./server <password>");
-        return 1;
-    }
-
-    if (strcmp(argv[1], "123") != 0)
-    {
-        perror("Wrong password");
-        return 0;
-    }
-
+    if (password_check(argc, argv) != 0) return EXIT_FAILURE;
     int client_fd;
     int server_fd = create_server_socket();
-
 
     struct sockaddr_in client_addr;
 

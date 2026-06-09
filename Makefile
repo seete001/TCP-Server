@@ -1,4 +1,4 @@
-objects = main.o auth.o client.o socket.o
+objects = main.o auth.o client.o socket.o serverpass.o
 CC = gcc
 CFLAGS = -Wall -Wextra -Wpedantic -pthread
 
@@ -16,6 +16,9 @@ client.o : client.c client.h auth.h
 
 socket.o : socket.c socket.h
 	$(CC) $(CFLAGS) -c socket.c
+
+serverpass.o : serverpass.c serverpass.h
+	$(CC) $(CFLAGS) -c serverpass.c
 	
 run : server
 	./server 123
